@@ -155,6 +155,7 @@ Fetch and render only what the view actually shows. Never blindly pull data, who
 
 - **Mobile/tablet responsiveness — confirm scope first.** A dynamic mobile/tablet layout takes real effort, so don't silently commit to it or skip it. Ask whether it's in scope before building.
 - **When mobile/tablet IS in scope, never let inputs zoom the page on focus.** Tapping a text input must not auto-zoom the viewport and wreck the layout. Give form inputs a `font-size` of at least 16px, and use a `<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">` (or `viewport-fit=cover` as needed) so focusing an input doesn't trigger the zoom.
+- **Debounce search/typeahead inputs — never fire an API call per keystroke.** A search box that hits the backend on every key press hammers the API and races responses. Wait until the user pauses typing (~300ms debounce) before firing, and cancel the in-flight request when a newer keystroke supersedes it so stale results can't overwrite fresh ones.
 
 ---
 
