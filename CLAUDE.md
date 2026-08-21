@@ -131,10 +131,13 @@ A single web search, one doc lookup, or a single-file read is ALWAYS inline.
 
 The goal: the user **understands it before they approve it**. Understanding first, permission second. **Put proposals at the very END of the message** — after the explanation, never mixed into it.
 
-For each proposed change, say exactly three things:
-> **What changes** — one plain sentence.
-> ***Why:*** the problem it fixes, or what breaks without it.
-> ***Cost:*** what it adds or removes, and what is given up.
+For each proposed change, use this exact layout — a blockquote holding a bold numbered title, then three bullets with bold labels and a colon, one sentence each. Never inline them into a paragraph.
+
+    > **1. <short title>**
+    >
+    > - **What changes:** One plain sentence.
+    > - **Why:** The problem it fixes, or what breaks without it.
+    > - **Cost:** What it adds or removes, and what is given up.
 
 - **One change per item, each answerable on its own** — never bundle several into one "shall I apply these?" The user needs to accept some and reject others.
 - **No shorthand approval.** A summary table of pending edits is a reminder, not an explanation; if the user hasn't seen the reasoning in full sentences, they can't agree.
