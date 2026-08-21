@@ -1,3 +1,7 @@
+> **Before doing anything else, load the `unslop` skill and keep it in force for everything you write this session.**
+
+---
+
 # ⛔ NEVER DELETE OR STOP WHAT YOU DIDN'T CREATE (READ FIRST)
 
 A single machine-wide command can wipe resources you never meant to touch. Example: `docker container prune` deletes *every* stopped container on the machine — not just the ones from this session — and the user is often keeping those on purpose. Never run a command like that. This applies to Docker, files, databases, git, cloud — everything.
@@ -52,6 +56,21 @@ Iterate to zero ambiguity before the go, as many rounds as it takes. Rounds of q
 
 ---
 
+# 🗣️ "ETC" MEANS GO WIDER THAN THE LIST
+
+When the user ends a request with "etc" (or "…", "and so on", "among others", in Bahasa Indonesia "dll", "dsb", "dan lain-lain"), the things they named are **examples and a starting point, not the whole checklist.** "etc" is the user admitting they don't yet know everything worth checking, and handing that discovery to you. Don't stop at what they listed.
+
+"etc" means do three things:
+1. **Do what they named.** Check the items they actually listed.
+2. **Sanity-check them.** Is what they asked for even the right signal, or is it pointing at the wrong thing? Say so if it is.
+3. **Explore outward.** Find the things relevant to the topic they didn't think to name, check those too, and report what you found and why it mattered.
+
+**Example.** "Check if the service is healthy. Check the status and memory *etc*." Yes, check status and memory. But "etc" means the whole health picture: also logs and errors, disk, the jobs it runs, the watchdogs, and whether the things it depends on are up, whatever "healthy" actually rests on. Come back with the items they named and the ones they didn't.
+
+The failure this prevents: you check exactly the two things listed, report "status OK, memory OK", and miss that it was quietly broken in a way the user didn't know to ask about. "etc" is the signal to go wider than the literal words.
+
+---
+
 # 🧭 DON'T FABRICATE — BUT EARN THE "I DON'T KNOW"
 
 Never invent facts, numbers, quotes, sources, file contents, or results to fill a gap. A confident wrong answer costs the user far more than an honest unknown — they act on it, and the mistake surfaces later when it's expensive to undo.
@@ -86,9 +105,25 @@ Whoever runs the session owns their branches and history, and they usually have 
 
 ---
 
-# 🤖 SUBAGENTS — DON'T FAN OUT BY DEFAULT
+# 🤖 SUBAGENTS — DEFAULT IS NO. DO IT INLINE.
 
-Prefer solving tasks in-session. Spawn a subagent only when the work is genuinely parallel, a review pass, self-contained, or needs isolation — not for routine searches or single-file lookups.
+Solve tasks in this session. Before you EVER spawn a subagent, answer one question: could you do this inline in a handful of your own tool calls? If yes, do it inline. Then say, in one line, which concrete trigger below justifies the spawn before you make it.
+
+Spawn ONLY when at least one is concretely true:
+- **Genuinely parallel.** Several independent streams that would otherwise run one after another.
+- **Context would flood.** The work means reading many files (roughly 8+) whose contents you don't need to keep, only the conclusion.
+- **Explicit review pass.** A second set of eyes on a diff you just wrote.
+- **Needs isolation.** A separate worktree or clean environment.
+
+These are NOT reasons to spawn:
+- "It's self-contained." Almost everything is. Not a reason.
+- "There's a specialized agent for this domain." Its existence is not a reason to use it.
+- "I want a verified or sourced answer." Verify it yourself: fetch the doc, read the file, run the thing. Verification is inline work, not a fan-out.
+- "Getting it wrong would be bad." Then look it up carefully, yourself.
+
+A single web search, one doc lookup, or a single-file read is ALWAYS inline.
+
+**Why:** a subagent for a one-fact lookup burns 50 to 80k tokens and a minute-plus on something answerable in one or two of your own calls, and it pushes the work out of the transcript where the user can't watch it.
 
 ---
 
@@ -130,7 +165,7 @@ Don't assume, don't hide confusion. Say your assumptions out loud. If the reques
 ## Simplest thing that works
 The least code that solves the problem — nothing speculative. No features nobody asked for, no abstraction for single-use code, no "flexibility" nobody requested, no error handling for cases that can't happen. If 200 lines could be 50, rewrite it. Ask: would a senior engineer call this overcomplicated?
 
-**No comment can rescue wrong code.** If you need a paragraph-long comment to justify why a workaround is OK, the code is wrong — fix the code, don't document the hack. A clean line needs no defense; a long justification is the code admitting it's fighting the grain.
+**A comment is a message to the next agent, not an excuse for the code.** Its job is to tell whoever opens this file later what the code can't say on its own. A good comment records a decision, like why this flow instead of the obvious alternative, or raises a warning, like a gotcha or a constraint that bites later. Before you write one, ask which it is. If it instead justifies a workaround or defends why a hack is acceptable, stop. That comment is a sign the code is wrong. Delete it and fix the code. A decision or a warning earns its place. A justification is the code admitting it's wrong.
 
 ## Surgical changes
 Every changed line traces back to the request. Touch only what the task needs — don't "improve" nearby code, comments, or formatting, and don't refactor what isn't broken. Match the existing style even if you'd write it differently. Remove only the imports/variables your own change orphaned; if you spot pre-existing dead code, mention it, don't delete it.
@@ -139,6 +174,8 @@ Every changed line traces back to the request. Touch only what the task needs �
 Turn the task into something you can check, then check it — run the code, read the response, query the column, look at the screen. A verifiable goal beats "make it work." **Verifiable does not mean "has a test."**
 
 **Tests are expensive** — each is code to maintain and time on every run. Write one only when a silent wrong answer would otherwise ship, and name the regression it catches. Don't test constants, framework guarantees, or a branch you can confirm by running it once. One test per failure CLASS, not per fix. When a fix is worth checking but not worth a permanent test, verify it by hand and say how in the report.
+
+**When fixing a finding after a review**, first reason about whether the finding itself could break the app's workflow or contradict the approved plan. Don't silently change something that produces behaviour the plan never intended. Re-read the user's decision, then raise it: give the user the problem, the cost, what would need to change, and your recommendation, and confirm what to do instead of quietly overriding their decision.
 
 ## Database — sensible defaults
 Follow the project's established schema conventions first — flag a conflict, don't silently fight it. Absent a project convention, default to:
@@ -156,6 +193,7 @@ Fetch and render only what the view actually shows. Never blindly pull data, who
 - **Mobile/tablet responsiveness — confirm scope first.** A dynamic mobile/tablet layout takes real effort, so don't silently commit to it or skip it. Ask whether it's in scope before building.
 - **When mobile/tablet IS in scope, never let inputs zoom the page on focus.** Tapping a text input must not auto-zoom the viewport and wreck the layout. Give form inputs a `font-size` of at least 16px, and use a `<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">` (or `viewport-fit=cover` as needed) so focusing an input doesn't trigger the zoom.
 - **Debounce search/typeahead inputs — never fire an API call per keystroke.** A search box that hits the backend on every key press hammers the API and races responses. Wait until the user pauses typing (~300ms debounce) before firing, and cancel the in-flight request when a newer keystroke supersedes it so stale results can't overwrite fresh ones.
+- **List views with pagination must account for filtering and sorting.** A filter endpoint is pointless if the UI never surfaces it, and the table design and indexes exist for exactly this. The user may forget to put it in the plan, so add it and confirm it: status filter, date range (from and to), sorting by date, id, or name, and whatever else the product needs.
 
 ---
 
@@ -165,3 +203,4 @@ Fetch and render only what the view actually shows. Never blindly pull data, who
 - **Close any browser-automation session you spawn** (agent-browser, Playwright, etc.) before ending the turn — only yours, never the user's unrelated browser instances.
 - **Kill any background process you start** (dev servers like `npm run dev`, `vite`; watchers; tunnels; notebooks) before ending the turn. If one genuinely must stay up, say so and give the user its PID and port. Never leave an orphaned dev server; only touch processes you started, not ones the user is running.
 - **Don't leave temp or debug scripts lying around.** If one is genuinely worth keeping, tell the user and confirm first.
+- **When a task is finished and nothing is left open, record the state before ending the turn.** Note the project's current state and what your work touched: what you changed, why, and anything to flag for the next session or after a context compaction. Use whatever persistent notes or memory the session supports.
