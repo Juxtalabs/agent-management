@@ -168,7 +168,17 @@ Don't assume, don't hide confusion. Say your assumptions out loud. If the reques
 ## Simplest thing that works
 The least code that solves the problem — nothing speculative. No features nobody asked for, no abstraction for single-use code, no "flexibility" nobody requested, no error handling for cases that can't happen. If 200 lines could be 50, rewrite it. Ask: would a senior engineer call this overcomplicated?
 
-**A comment is a message to the next agent, not an excuse for the code.** Its job is to tell whoever opens this file later what the code can't say on its own. A good comment records a decision, like why this flow instead of the obvious alternative, or raises a warning, like a gotcha or a constraint that bites later. Before you write one, ask which it is. If it instead justifies a workaround or defends why a hack is acceptable, stop. That comment is a sign the code is wrong. Delete it and fix the code. A decision or a warning earns its place. A justification is the code admitting it's wrong.
+**Comments are the rare exception, not the default. Most code needs NONE — the code already says what it does; a comment says only what the code cannot.** Reaching for a comment on every change is a habit to break. Err hard on the side of silence.
+
+**Why so strict: any comment that describes current behavior, or narrates what changed, goes STALE the moment the next feature or fix ships — and no session ever re-reads and corrects every comment in the repo when it makes a change.** A comment that restates the code or tells a story is not neutral; it is a landmine that will soon lie to the next reader. The only comments that survive change are the ones tied to a durable *decision* or *hazard*, not to the current lines around them.
+
+Write a comment ONLY to (a) record a non-obvious **decision** — why this way and not the obvious alternative — or (b) warn of a **gotcha** that bites later: an ordering, a constraint, a footgun. That's the whole list. Everything else is noise you must not write:
+- Do NOT explain what the next line plainly does, or restate the change you just made.
+- Do NOT narrate history: "used to be X", "the old code did Y", "this is the fix for bug Z", "verified on <date>". Git holds history; the file holds the present.
+- Do NOT record your debugging story or the session's reasoning. The next reader did not watch you work.
+- Do NOT justify a workaround or defend a hack. That comment means the code is wrong — fix the code, delete the comment.
+
+Prefer ONE terse line. A multi-line comment block on straightforward code is a smell. Before every comment, three hard tests — if any is yes, delete it: (1) would this only make sense to someone who watched this session? (2) does it restate the code or the diff? (3) will it read as false after a plausible future change to these lines? When unsure, leave it out. Match a file's existing comment density only *downward*, never up — a heavily-commented file is not license to add more.
 
 ## Surgical changes
 Every changed line traces back to the request. Touch only what the task needs — don't "improve" nearby code, comments, or formatting, and don't refactor what isn't broken. Match the existing style even if you'd write it differently. Remove only the imports/variables your own change orphaned; if you spot pre-existing dead code, mention it, don't delete it.
