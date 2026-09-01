@@ -56,6 +56,52 @@ Iterate to zero ambiguity before the go, as many rounds as it takes. Rounds of q
 
 ---
 
+# ⛔ THE COMMENT GATE — DEFAULT IS ZERO COMMENTS
+
+Before typing `//`, `#`, or `/*`, stop. The default is no comment. Good code explains itself — the name, the type, the structure carry the meaning. A comment is an exception you must justify, never a habit. Reaching for one on every change is a habit to break. Err hard on the side of silence.
+
+**The gate — a comment survives ONLY if it passes all three:**
+1. It records a **decision** (why this way, not the obvious alternative) or a **hazard** (an ordering, a constraint, a footgun that bites later).
+2. It will STILL be true after the next fix ships to these lines. History and "what changed" always fail this.
+3. It makes sense to someone who never watched this session — not a debugging story, not the diff.
+
+Fail any one → delete it. Unsure → delete it. Prefer ONE terse line; a multi-line block on straight-line code is a smell.
+
+**What you're about to write, and the verdict:**
+
+| You're about to write | Verdict |
+|---|---|
+| `// loop over users and send email` — restates the code | ❌ DELETE |
+| `// used to be a for-loop, switched to map` — history | ❌ DELETE |
+| `// fix for the null crash on 2026-08-04` — debugging story | ❌ DELETE |
+| `// verified working` / `// handles the edge case` — narration | ❌ DELETE |
+| `// HACK: works around the broken API` — defending a hack | ❌ DELETE, fix the code |
+| `// Stripe rejects amounts over 999999, cap before send` — hazard | ✅ KEEP |
+| `// must run before auth() — seeds the session token` — ordering | ✅ KEEP |
+| `// binary search, not linear: this list can hit 1M rows` — non-obvious decision | ✅ KEEP |
+
+**Before / after:**
+
+```js
+// BAD — four comments, none survive the next change
+function getTotal(items) {
+  let sum = 0;                              // start at zero
+  for (const it of items) sum += it.price; // changed from forEach for speed
+  return sum;                              // return the total
+}
+
+// GOOD — the code already says all of it
+function getTotal(items) {
+  let sum = 0;
+  for (const it of items) sum += it.price;
+  return sum;
+}
+```
+
+**Why this is a hard rule, not a preference:** a comment that describes current code or narrates a change goes STALE the moment the next fix ships, and no session ever re-reads and corrects every comment when it edits. So a restating or story-telling comment isn't neutral — it is a landmine that will soon lie to the next reader. Only decision/hazard comments survive change. Match a file's existing comment density only *downward*, never up.
+
+---
+
 # 🗣️ "ETC" MEANS GO WIDER THAN THE LIST
 
 When the user ends a request with "etc" (or "…", "and so on", "among others", in Bahasa Indonesia "dll", "dsb", "dan lain-lain"), the things they named are **examples and a starting point, not the whole checklist.** "etc" is the user admitting they don't yet know everything worth checking, and handing that discovery to you. Don't stop at what they listed.
@@ -168,17 +214,7 @@ Don't assume, don't hide confusion. Say your assumptions out loud. If the reques
 ## Simplest thing that works
 The least code that solves the problem — nothing speculative. No features nobody asked for, no abstraction for single-use code, no "flexibility" nobody requested, no error handling for cases that can't happen. If 200 lines could be 50, rewrite it. Ask: would a senior engineer call this overcomplicated?
 
-**Comments are the rare exception, not the default. Most code needs NONE — the code already says what it does; a comment says only what the code cannot.** Reaching for a comment on every change is a habit to break. Err hard on the side of silence.
-
-**Why so strict: any comment that describes current behavior, or narrates what changed, goes STALE the moment the next feature or fix ships — and no session ever re-reads and corrects every comment in the repo when it makes a change.** A comment that restates the code or tells a story is not neutral; it is a landmine that will soon lie to the next reader. The only comments that survive change are the ones tied to a durable *decision* or *hazard*, not to the current lines around them.
-
-Write a comment ONLY to (a) record a non-obvious **decision** — why this way and not the obvious alternative — or (b) warn of a **gotcha** that bites later: an ordering, a constraint, a footgun. That's the whole list. Everything else is noise you must not write:
-- Do NOT explain what the next line plainly does, or restate the change you just made.
-- Do NOT narrate history: "used to be X", "the old code did Y", "this is the fix for bug Z", "verified on <date>". Git holds history; the file holds the present.
-- Do NOT record your debugging story or the session's reasoning. The next reader did not watch you work.
-- Do NOT justify a workaround or defend a hack. That comment means the code is wrong — fix the code, delete the comment.
-
-Prefer ONE terse line. A multi-line comment block on straightforward code is a smell. Before every comment, three hard tests — if any is yes, delete it: (1) would this only make sense to someone who watched this session? (2) does it restate the code or the diff? (3) will it read as false after a plausible future change to these lines? When unsure, leave it out. Match a file's existing comment density only *downward*, never up — a heavily-commented file is not license to add more.
+Comments: see **⛔ THE COMMENT GATE** above — the default is zero comments.
 
 ## Surgical changes
 Every changed line traces back to the request. Touch only what the task needs — don't "improve" nearby code, comments, or formatting, and don't refactor what isn't broken. Match the existing style even if you'd write it differently. Remove only the imports/variables your own change orphaned; if you spot pre-existing dead code, mention it, don't delete it.
